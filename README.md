@@ -1,3 +1,7 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![three.js](https://img.shields.io/badge/three.js-0.187.0-black)](https://threejs.org/)
+[![No build step](https://img.shields.io/badge/build-none-brightgreen)](#how-to-run)
+
 # SALTLINE — Whitewash Strike
 
 A round-based tactical FPS in the style Counter-Strike made famous, on
