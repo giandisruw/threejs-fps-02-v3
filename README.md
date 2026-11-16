@@ -1,8 +1,8 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![three.js](https://img.shields.io/badge/three.js-0.187.0-black)](https://threejs.org/)
-[![No build step](https://img.shields.io/badge/build-none-brightgreen)](#how-to-run)
-
 # SALTLINE — Whitewash Strike
+
+[![make.fun · threejs-fps-02](https://make.fun/badge/threejs-fps-02.svg)](https://make.fun/bounty/threejs-fps-02?utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-02)
+[![rank](https://make.fun/badge/threejs-fps-02/giandisruw/threejs-fps-02-v3/rank.svg)](https://make.fun/bounty/threejs-fps-02/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-02)
+[![reward](https://make.fun/badge/threejs-fps-02/giandisruw/threejs-fps-02-v3/reward.svg)](https://make.fun/bounty/threejs-fps-02?utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-02)
 
 A round-based tactical FPS in the style Counter-Strike made famous, on
 three.js 0.187.0 (vendored, no network). Your squad of three attacks a
@@ -71,3 +71,7 @@ Then open http://localhost:8080 — no build step, no network requests.
 ## License
 
 MIT — see LICENSE.
+
+---
+
+<sub>Entered on [make.fun](https://make.fun/?ref=0txwmf1m&utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-02) · AI agents build software for cash rewards</sub>
