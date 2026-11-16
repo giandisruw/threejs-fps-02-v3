@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SALTLINE — Whitewash Strike</title>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.min.js" } }
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #bfd9e8;
+    font-family: 'Segoe UI', system-ui, sans-serif; color: #fff; }
+  #app, #app canvas { width: 100%; height: 100%; display: block; }
+  #boot-status { position: fixed; left: 6px; bottom: 4px; z-index: 40;
+    font-size: 10px; color: rgba(255,255,255,.55); }
+  /* top bar */
+  #hud-top { position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 18px; align-items: center; z-index: 10;
+    background: rgba(10,20,24,.62); padding: 8px 18px; border-radius: 8px;
+    font-weight: 700; letter-spacing: .04em; }
+  #timer { font-size: 22px; color: #ffd27a; min-width: 64px; text-align: center; }
+  #score { font-size: 17px; }
+  #alive { font-size: 13px; color: #cfe8ef; }
+  /* minimap */
+  #minimap { position: fixed; top: 12px; left: 12px; z-index: 10;
+    border: 2px solid rgba(255,255,255,.65); border-radius: 6px;
+    background: #e8e4d8; }
+  /* bottom-left vitals */
+  #vitals { position: fixed; left: 16px; bottom: 16px; z-index: 10; width: 240px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .bar-label { width: 52px; font-size: 12px; font-weight: 700; }
+  .bar { flex: 1; height: 14px; background: rgba(10,20,24,.6); border-radius: 4px; overflow: hidden; }
+  .bar > div { height: 100%; }
+  #health-fill { background: #37c978; width: 100%; }
+  #armor-fill { background: #4da3ff; width: 0%; }
+  .bar-num { width: 34px; text-align: right; font-weight: 700; }
+  /* bottom-right ammo */
+  #ammo-box { position: fixed; right: 18px; bottom: 16px; z-index: 10; text-align: right;
+    text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+  #ammo { font-size: 34px; font-weight: 800; }
+  #weapon-name { font-size: 14px; color: #ffd27a; font-weight: 700; }
+  #money { font-size: 18px; font-weight: 800; color: #8dff9a; margin-top: 2px; }
+  /* crosshair */
+  #crosshair { position: fixed; left: 50%; top: 50%; z-index: 9; width: 0; height: 0;
+    --gap: 8px; pointer-events: none; }
+  #crosshair::before, #crosshair::after { content: ''; position: absolute; background: #fff;
+    box-shadow: 0 0 2px #000; }
+  #crosshair::before { width: 2px; height: calc(var(--gap) * 2 + 8px);
+    left: -1px; top: calc(-1 * var(--gap) - 4px); }
+  #crosshair::after { height: 2px; width: calc(var(--gap) * 2 + 8px);
+    top: -1px; left: calc(-1 * var(--gap) - 4px); }
+  #hitmarker { position: fixed; left: 50%; top: 50%; z-index: 11; transform: translate(-50%,-50%);
+    font-size: 26px; font-weight: 900; opacity: 0; pointer-events: none; }
+  #damage { position: fixed; inset: 0; z-index: 8; pointer-events: none; opacity: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(255,30,30,.55) 100%); }
+  /* banner + prompt */
+  #banner { position: fixed; top: 22%; left: 50%; transform: translateX(-50%); z-index: 12;
+    font-size: 26px; font-weight: 900; letter-spacing: .06em; text-align: center;
+    text-shadow: 0 2px 8px rgba(0,0,0,.8); opacity: 0; transition: opacity .3s; }
+  #prompt { position: fixed; bottom: 22%; left: 50%; transform: translateX(-50%); z-index: 12;
+    font-size: 17px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+  #plant-wrap { position: fixed; bottom: 27%; left: 50%; transform: translateX(-50%);
+    width: 300px; z-index: 12; display: none; text-align: center; }
+  #plant-label { font-size: 13px; font-weight: 700; margin-bottom: 4px; text-shadow: 0 1px 3px #000; }
+  #plant-bar { height: 10px; background: rgba(0,0,0,.6); border-radius: 5px; overflow: hidden; }
+  #plant-fill { height: 100%; background: #e86a1c; width: 0%; }
+  /* killfeed */
+  #killfeed { position: fixed; top: 12px; right: 12px; z-index: 10; text-align: right;
+    font-size: 13px; font-weight: 600; }
+  .feed-line { background: rgba(10,20,24,.6); padding: 3px 9px; border-radius: 4px;
+    margin-bottom: 4px; text-shadow: 0 1px 2px #000; }
+  /* buy menu */
+  #buy-menu { position: fixed; inset: 0; z-index: 20; display: none;
+    align-items: center; justify-content: center; background: rgba(8,16,20,.55); }
+  #buy-panel { background: rgba(12,26,30,.95); border: 1px solid #2e6f73; border-radius: 10px;
+    padding: 22px 26px; width: 420px; }
+  #buy-panel h2 { color: #ffd27a; margin-bottom: 4px; }
+  #buy-panel p { font-size: 13px; color: #cfe8ef; margin-bottom: 12px; }
+  .buy-item { display: block; width: 100%; text-align: left; margin: 5px 0; padding: 9px 12px;
+    background: #1f4d52; color: #fff; border: 1px solid #2e6f73; border-radius: 6px;
+    font-size: 15px; cursor: pointer; }
+  .buy-item:hover { background: #e86a1c; }
+  /* full screens */
+  .screen { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    background: linear-gradient(180deg, rgba(10,26,30,.82), rgba(10,26,30,.68)); }
+  .screen h1 { font-size: 52px; letter-spacing: .1em; color: #fff; }
+  .screen h1 span { color: #e86a1c; }
+  .screen h2 { font-size: 15px; color: #ffd27a; letter-spacing: .28em; margin: 8px 0 18px; }
+  .screen p { max-width: 560px; font-size: 15px; line-height: 1.65; color: #d8ecef; }
+  .screen .keys { margin-top: 14px; font-size: 13px; color: #9fc4cc; line-height: 1.8; }
+  .big-btn { margin-top: 22px; padding: 13px 42px; font-size: 18px; font-weight: 800;
+    letter-spacing: .08em; color: #fff; background: #e86a1c; border: none;
+    border-radius: 8px; cursor: pointer; }
+  .big-btn:hover { background: #f07d33; }
+  #round-title { font-size: 40px; }
+  #round-sub { margin-top: 10px; }
+  #menu-screen { display: flex; }
+  #round-screen { display: none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="boot-status">LOADING</div>
+<canvas id="minimap" width="150" height="106"></canvas>
+<div id="hud-top"><span id="timer">—</span><span id="score">SALTLINE 0 — 0 BRINE</span><span id="alive"></span></div>
+<div id="vitals">
+  <div class="bar-row"><span class="bar-label">HEALTH</span><div class="bar"><div id="health-fill"></div></div><span class="bar-num" id="health-num">100</span></div>
+  <div class="bar-row"><span class="bar-label">ARMOR</span><div class="bar"><div id="armor-fill"></div></div><span class="bar-num" id="armor-num">0</span></div>
+</div>
+<div id="ammo-box"><div id="ammo">12 / 36</div><div id="weapon-name">P250 Dune</div><div id="money">$800</div></div>
+<div id="crosshair"></div>
+<div id="hitmarker">✕</div>
+<div id="damage"></div>
+<div id="banner"></div>
+<div id="prompt"></div>
+<div id="plant-wrap"><div id="plant-label"></div><div id="plant-bar"><div id="plant-fill"></div></div></div>
+<div id="killfeed"></div>
+<div id="buy-menu"><div id="buy-panel"><h2>BUY PHASE</h2><p>Spend your money — armour and rifles win rounds. Keys 1–7 buy, B closes.</p><div id="buy-items"></div></div></div>
+<div id="menu-screen" class="screen">
+  <h1>SALT<span>LINE</span></h1>
+  <h2>WHITEWASH STRIKE · THREE.JS TACTICAL FPS</h2>
+  <p>Your squad of three attacks a salt-evaporation station held by four defenders.
+  Plant the charge at site A (Pump House) or site B (Crystallizer), or eliminate the
+  defenders. First team to 5 rounds takes the station. Earn money, buy rifles,
+  Kevlar and grenades between rounds — and stop to aim: moving fire sprays wide.</p>
+  <div class="keys">WASD move · Mouse aim · Click fire · Right-click aim down sights · R reload<br>
+  E hold to plant · G throw HE charge · B buy menu · 1–4 switch weapon · Ctrl/C crouch · Space jump</div>
+  <div id="menu-score" style="margin-top:12px;color:#ffd27a;font-weight:700;"></div>
+  <button id="start-btn" class="big-btn">DEPLOY — CLICK TO PLAY</button>
+</div>
+<div id="round-screen" class="screen">
+  <h1 id="round-title">ROUND WON</h1>
+  <p id="round-sub"></p>
+  <button id="restart-btn" class="big-btn">NEXT ROUND</button>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
